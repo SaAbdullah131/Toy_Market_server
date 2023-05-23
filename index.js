@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion,ObjectId} = require('mongodb');
 require('dotenv').config();
 
 const app = express();
@@ -41,12 +41,31 @@ async function run() {
         const result = await cursor.toArray();
         res.send(result);
     })
-    // specifi id wise toy
-    app.get('/toys/just/:id', async (req, res) => {
+    // specific id wise toy
+    app.get('/alltoy/just/:id', async (req, res) => {
         const id= req.params.id;
         const query = { _id: new ObjectId(id) };
         const result = await toyCollection.findOne(query);
         res.send(result);
+    })
+    // sub-category
+    app.get('/alltoy/:sub_category', async (req, res) => {
+        const subCategory = req.params.sub_category;
+        const query = { sub_category: subCategory };
+        const options = {
+            projection: { _id: 1, img_url: 1, toy_name: 1, price: 1, rating: 1 },
+        }
+        const result = await toyCollection.find(query, options).toArray();
+        res.send(result);
+    })
+
+    // mytoy list after login
+    app.get('/mytoy', async (req, res) => {
+        const userEmail = req.query?.email;
+        const query = { seller_email: userEmail};
+        const result = await toyCollection.find(query).toArray();
+        res.send(result);
+
     })
 
     // Send a ping to confirm a successful connection
