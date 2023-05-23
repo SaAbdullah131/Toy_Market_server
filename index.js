@@ -9,7 +9,7 @@ const port = process.env.PORT || 5000;
 // middleware 
 app.use(cors());
 app.use(express.json());
-console.log(process.env.DB_PASS);
+// console.log(process.env.DB_PASS);
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.satt96b.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -19,13 +19,21 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
+  useNewUrlParser: true,
+    useUnifiedTopology: true,
+    maxPoolSize: 10,
 });
 
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    client.connect((err) => {
+        if (err) {
+            console.error(err);
+            return;
+        }
+    });
 
     const toyCollection = client.db('toddlershop').collection('alltoy');
     app.get('/alltoy',async(req,res)=> {
@@ -33,6 +41,14 @@ async function run() {
         const result = await cursor.toArray();
         res.send(result);
     })
+    // specifi id wise toy
+    app.get('/toys/just/:id', async (req, res) => {
+        const id= req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await toyCollection.findOne(query);
+        res.send(result);
+    })
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
