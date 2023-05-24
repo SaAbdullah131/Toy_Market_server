@@ -38,10 +38,20 @@ async function run() {
         const toyCollection = client.db('toddlershop').collection('alltoy');
         app.get('/alltoy', async (req, res) => {
             const limit = parseInt(req.query?.limit);
-            console.log(limit);
-            const cursor = toyCollection.find().limit(limit);
-            const result = await cursor.toArray();
-            res.send(result);
+            const checkSearch = req.query?.search;
+            
+            if(checkSearch) {
+                const query = {toy_name:checkSearch};
+                const result = await toyCollection.findOne(query);
+                const resultArray = [result] ;
+                res.send(resultArray);
+            } else {
+                const cursor = toyCollection.find().limit(limit);
+                const result = await cursor.toArray();
+                res.send(result);
+            }
+            // console.log(limit);
+           
         })
         // specific id wise toy
         app.get('/alltoy/just/:id', async (req, res) => {
@@ -86,8 +96,9 @@ async function run() {
             res.send(result);
         })
         // update toy
-        app.put('/update/:id', async (req, res) => {
+        app.patch('/update/:id', async (req, res) => {
             const id = req.params.id;
+            console.log('Hello');
             const filter = { _id: new ObjectId(id) };
             const updateToy = req.body;
             // console.log(updateToy);
@@ -98,8 +109,8 @@ async function run() {
                     sub_category: updateToy.sub_category,
                     price: updateToy.price,
                     rating: updateToy.rating,
-                    quantity: updateToy.quantity,
-                    detail_description: updateToy.detail_descriptions
+                    quantity: updateToy.available_quantity,
+                    detail_description: updateToy.details_descriptions
                 }
             }
             const result = await toyCollection.updateOne(filter,updatedDocument);
